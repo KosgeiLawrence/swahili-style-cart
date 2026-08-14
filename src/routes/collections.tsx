@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { collections } from "@/lib/data";
 import { useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/collections")({
@@ -24,7 +23,7 @@ export const Route = createFileRoute("/collections")({
 });
 
 function Collections() {
-  const { catalog } = useStore();
+  const { catalog, siteCollections: collections } = useStore();
   return (
     <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
       <p className="eyebrow">Collections</p>

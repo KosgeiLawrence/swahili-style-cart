@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Search } from "lucide-react";
-import { CATEGORIES, collections } from "@/lib/data";
+import { CATEGORIES } from "@/lib/data";
 import { useStore } from "@/lib/store";
 import ProductCard from "@/components/ProductCard";
 

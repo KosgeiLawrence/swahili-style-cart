@@ -4,19 +4,12 @@ import { Menu, X, ShoppingBag, User } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useStore } from "@/lib/store";
 
-const links = [
-  { to: "/", label: "Home" },
-  { to: "/shop", label: "Shop" },
-  { to: "/collections", label: "Collections" },
-  { to: "/about", label: "About" },
-  { to: "/account", label: "My Account" },
-] as const;
-
-const adminLink = { to: "/admin", label: "Admin" } as const;
+const adminLink = { to: "/admin", label: "Admin" };
 
 export default function Nav() {
   const [open, setOpen] = useState(false);
-  const { cartCount, user } = useStore();
+  const { cartCount, user, site } = useStore();
+  const links = [...site.menu, ...(user?.isAdmin ? [adminLink] : [])];
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
@@ -37,7 +30,7 @@ export default function Nav() {
           </Link>
 
           <ul className="hidden items-center gap-8 lg:flex">
-            {[...links, ...(user?.isAdmin ? [adminLink] : [])].map((l) => {
+            {links.map((l) => {
               const active = pathname === l.to;
               return (
                 <li key={l.to}>
@@ -75,10 +68,10 @@ export default function Nav() {
               )}
             </Link>
             <Link
-              to="/collections"
+              to={site.ctaTo}
               className="hidden rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-transform hover:-translate-y-0.5 md:inline-flex"
             >
-              Explore Collection
+              {site.ctaLabel}
             </Link>
             <button
               type="button"
@@ -96,7 +89,7 @@ export default function Nav() {
       {open && (
         <div className="glass-strong border-x-0 border-t-0 lg:hidden">
           <ul className="mx-auto flex max-w-7xl flex-col px-5 py-3">
-            {[...links, ...(user?.isAdmin ? [adminLink] : [])].map((l) => (
+            {links.map((l) => (
               <li key={l.to}>
                 <Link
                   to={l.to}
@@ -111,11 +104,11 @@ export default function Nav() {
             ))}
             <li className="py-4">
               <Link
-                to="/collections"
+                to={site.ctaTo}
                 onClick={() => setOpen(false)}
                 className="block rounded-full bg-primary px-5 py-3 text-center text-sm font-medium text-primary-foreground"
               >
-                Explore Collection
+                {site.ctaLabel}
               </Link>
             </li>
           </ul>
