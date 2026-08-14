@@ -30,7 +30,7 @@ export default function Nav() {
               alt="Swahili Design Lab"
               width={1152}
               height={576}
-              className="h-9 w-auto sm:h-11"
+              className="h-10 w-auto sm:h-14"
             />
           </Link>
 
