@@ -14,7 +14,7 @@ import { products, type Product } from "./data";
 export type CartItem = {
   slug: string;
   qty: number;
-  option?: string;
+  option?: string | undefined;
 };
 
 export type OrderStatus =
@@ -36,16 +36,16 @@ export type Order = {
     phone: string;
     location: string;
     county: string;
-    notes?: string;
+    notes?: string | undefined;
   };
-  items: { slug: string; name: string; qty: number; price: number; option?: string }[];
+  items: { slug: string; name: string; qty: number; price: number; option?: string | undefined }[];
   total: number;
 };
 
 export type Account = {
   name: string;
   email: string;
-  phone?: string;
+  phone?: string | undefined;
 };
 
 /* -------------------------------- utilities ------------------------------- */
@@ -201,8 +201,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         "sdl.accounts",
         {},
       );
-      if (existing[prev.email]) {
-        existing[prev.email].account = next;
+      const rec = existing[prev.email];
+      if (rec) {
+        rec.account = next;
         write("sdl.accounts", existing);
       }
       return next;
