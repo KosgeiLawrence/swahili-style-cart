@@ -4,7 +4,11 @@ import { Search } from "lucide-react";
 import { CATEGORIES, collections, products } from "@/lib/data";
 import ProductCard from "@/components/ProductCard";
 
-type ShopSearch = { collection?: string; q?: string; category?: string };
+type ShopSearch = {
+  collection?: string | undefined;
+  q?: string | undefined;
+  category?: string | undefined;
+};
 
 export const Route = createFileRoute("/shop")({
   validateSearch: (search: Record<string, unknown>): ShopSearch => ({
