@@ -127,9 +127,13 @@ export const clearSite = () => removeKey(SITE_KEY);
 
 /* ------------------------------- collections ------------------------------- */
 
+/* Snapshot taken before any admin edits mutate the shared module array. */
+const pristineCollections: Collection[] = defaultCollections.map((c) => ({ ...c }));
+
 export const loadCollections = (): Collection[] => {
   const stored = readKey<Collection[] | null>(COLLECTIONS_KEY, null);
-  if (!Array.isArray(stored) || stored.length === 0) return [...defaultCollections];
+  if (!Array.isArray(stored) || stored.length === 0)
+    return pristineCollections.map((c) => ({ ...c }));
   return stored;
 };
 
