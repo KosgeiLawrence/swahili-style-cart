@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Recycle, Scissors, Sprout } from "lucide-react";
 import hero from "@/assets/hero.jpg";
 import { collections } from "@/lib/data";
+import { useStore } from "@/lib/store";
 import ProductCard from "@/components/ProductCard";
 
 export const Route = createFileRoute("/")({
