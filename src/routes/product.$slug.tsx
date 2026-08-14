@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Minus, Plus, Leaf } from "lucide-react";
-import { collectionName, formatKES, getProduct, products } from "@/lib/data";
+import { collectionName, formatKES, getProduct } from "@/lib/data";
 import { useStore } from "@/lib/store";
 import ProductCard from "@/components/ProductCard";
 
@@ -36,12 +36,12 @@ export const Route = createFileRoute("/product/$slug")({
 
 function ProductPage() {
   const { product } = Route.useLoaderData();
-  const { addToCart } = useStore();
+  const { addToCart, catalog } = useStore();
   const navigate = useNavigate();
   const [qty, setQty] = useState(1);
   const [option, setOption] = useState(product.options?.values[0]);
 
-  const related = products
+  const related = catalog
     .filter((p) => p.slug !== product.slug && p.collection === product.collection)
     .slice(0, 4);
 

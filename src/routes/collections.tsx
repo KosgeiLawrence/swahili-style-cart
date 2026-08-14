@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { collections, products } from "@/lib/data";
+import { collections } from "@/lib/data";
+import { useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/collections")({
   head: () => ({
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/collections")({
 });
 
 function Collections() {
+  const { catalog } = useStore();
   return (
     <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
       <p className="eyebrow">Collections</p>
@@ -33,7 +35,7 @@ function Collections() {
 
       <div className="mt-12 space-y-14">
         {collections.map((c, i) => {
-          const count = products.filter((p) => p.collection === c.slug).length;
+          const count = catalog.filter((p) => p.collection === c.slug).length;
           return (
             <section
               key={c.slug}

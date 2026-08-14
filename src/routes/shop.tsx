@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Search } from "lucide-react";
-import { CATEGORIES, collections, products } from "@/lib/data";
+import { CATEGORIES, collections } from "@/lib/data";
+import { useStore } from "@/lib/store";
 import ProductCard from "@/components/ProductCard";
 
 type ShopSearch = {
@@ -46,10 +47,11 @@ function Shop() {
   const [collection, setCollection] = useState(initial.collection ?? "all");
   const [maxPrice, setMaxPrice] = useState(8000);
   const [sort, setSort] = useState("featured");
+  const { catalog } = useStore();
 
   const results = useMemo(() => {
     const term = q.trim().toLowerCase();
-    let list = products.filter((p) => {
+    let list = catalog.filter((p) => {
       const matchesTerm =
         !term ||
         p.name.toLowerCase().includes(term) ||
@@ -64,7 +66,7 @@ function Shop() {
     if (sort === "price-desc") list = [...list].sort((a, b) => b.price - a.price);
     if (sort === "name") list = [...list].sort((a, b) => a.name.localeCompare(b.name));
     return list;
-  }, [q, category, collection, maxPrice, sort]);
+  }, [catalog, q, category, collection, maxPrice, sort]);
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">

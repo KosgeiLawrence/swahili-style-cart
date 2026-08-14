@@ -12,9 +12,11 @@ const links = [
   { to: "/account", label: "My Account" },
 ] as const;
 
+const adminLink = { to: "/admin", label: "Admin" } as const;
+
 export default function Nav() {
   const [open, setOpen] = useState(false);
-  const { cartCount } = useStore();
+  const { cartCount, user } = useStore();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
@@ -35,7 +37,7 @@ export default function Nav() {
           </Link>
 
           <ul className="hidden items-center gap-8 lg:flex">
-            {links.map((l) => {
+            {[...links, ...(user?.isAdmin ? [adminLink] : [])].map((l) => {
               const active = pathname === l.to;
               return (
                 <li key={l.to}>
@@ -94,7 +96,7 @@ export default function Nav() {
       {open && (
         <div className="glass-strong border-x-0 border-t-0 lg:hidden">
           <ul className="mx-auto flex max-w-7xl flex-col px-5 py-3">
-            {links.map((l) => (
+            {[...links, ...(user?.isAdmin ? [adminLink] : [])].map((l) => (
               <li key={l.to}>
                 <Link
                   to={l.to}
