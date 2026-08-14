@@ -9,6 +9,18 @@ import {
 } from "react";
 import { products, type Product } from "./data";
 import { clearCatalog, loadCatalog, persistCatalog, syncModuleCatalog } from "./catalog";
+import { type Collection } from "./data";
+import {
+  clearCollections,
+  clearSite,
+  defaultSite,
+  loadCollections,
+  loadSite,
+  persistCollections,
+  persistSite,
+  syncModuleCollections,
+  type SiteContent,
+} from "./site";
 
 /* ---------------------------------- types --------------------------------- */
 
@@ -123,6 +135,13 @@ type StoreValue = {
   updateProfile: (a: Partial<Account>) => void;
   orders: Order[];
   catalog: Product[];
+  siteCollections: Collection[];
+  saveCollection: (c: Collection, originalSlug?: string) => { ok: boolean; error?: string };
+  deleteCollection: (slug: string) => void;
+  resetCollections: () => void;
+  site: SiteContent;
+  saveSite: (site: SiteContent) => void;
+  resetSite: () => void;
   saveProduct: (product: Product, originalSlug?: string) => { ok: boolean; error?: string };
   deleteProduct: (slug: string) => void;
   resetCatalog: () => void;
@@ -140,6 +159,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Account | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [catalog, setCatalog] = useState<Product[]>(products);
+  const [siteCollections, setSiteCollections] = useState<Collection[]>(loadCollections);
+  const [site, setSite] = useState<SiteContent>(defaultSite);
 
   useEffect(() => {
     setCart(read<CartItem[]>(CART_KEY, []));
@@ -149,6 +170,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const stored = loadCatalog();
     syncModuleCatalog(stored);
     setCatalog(stored);
+    const storedCollections = loadCollections();
+    syncModuleCollections(storedCollections);
+    setSiteCollections(storedCollections);
+    setSite(loadSite());
     setReady(true);
   }, []);
 
@@ -215,6 +240,52 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     (slug: string) => commitCatalog(loadCatalog().filter((p) => p.slug !== slug)),
     [commitCatalog],
   );
+
+  const commitCollections = useCallback((list: Collection[]) => {
+    persistCollections(list);
+    syncModuleCollections(list);
+    setSiteCollections(list);
+  }, []);
+
+  const saveCollection: StoreValue["saveCollection"] = useCallback(
+    (collection, originalSlug) => {
+      const slug = collection.slug.trim().toLowerCase();
+      if (!slug || !collection.name.trim())
+        return { ok: false, error: "Name and slug are required." };
+      const list = loadCollections();
+      const index = list.findIndex((c) => c.slug === (originalSlug ?? slug));
+      if (list.some((c, i) => c.slug === slug && i !== index))
+        return { ok: false, error: "Another collection already uses that slug." };
+      const next: Collection = { ...collection, slug };
+      if (index >= 0) list[index] = next;
+      else list.push(next);
+      commitCollections([...list]);
+      return { ok: true };
+    },
+    [commitCollections],
+  );
+
+  const deleteCollection = useCallback(
+    (slug: string) => commitCollections(loadCollections().filter((c) => c.slug !== slug)),
+    [commitCollections],
+  );
+
+  const resetCollections = useCallback(() => {
+    clearCollections();
+    const defaults = loadCollections();
+    syncModuleCollections(defaults);
+    setSiteCollections(defaults);
+  }, []);
+
+  const saveSite = useCallback((next: SiteContent) => {
+    persistSite(next);
+    setSite(next);
+  }, []);
+
+  const resetSite = useCallback(() => {
+    clearSite();
+    setSite(loadSite());
+  }, []);
 
   const resetCatalog = useCallback(() => {
     clearCatalog();
