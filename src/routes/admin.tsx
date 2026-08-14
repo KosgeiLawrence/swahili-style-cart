@@ -199,7 +199,10 @@ function AdminPage() {
           onSubmit={() => {
             if (!colDraft) return;
             const res = saveCollection(colDraft, colOriginal);
-            if (!res.ok) return toast.error(res.error ?? "Could not save.");
+            if (!res.ok) {
+              toast.error(res.error ?? "Could not save.");
+              return;
+            }
             toast.success(colOriginal ? "Collection updated" : "Collection added");
             setColDraft(null);
             setColOriginal(undefined);
