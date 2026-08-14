@@ -35,7 +35,7 @@ export default function Nav() {
               return (
                 <li key={l.to}>
                   <Link
-                    to={l.to}
+                    to={l.to as "/"}
                     className={`text-sm font-medium transition-colors hover:text-primary ${
                       active ? "text-primary" : "text-foreground"
                     }`}
@@ -68,7 +68,7 @@ export default function Nav() {
               )}
             </Link>
             <Link
-              to={site.ctaTo}
+              to={site.ctaTo as "/"}
               className="hidden rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-transform hover:-translate-y-0.5 md:inline-flex"
             >
               {site.ctaLabel}
@@ -92,7 +92,7 @@ export default function Nav() {
             {links.map((l) => (
               <li key={l.to}>
                 <Link
-                  to={l.to}
+                  to={l.to as "/"}
                   onClick={() => setOpen(false)}
                   className={`block border-b border-border/50 py-4 text-base font-medium ${
                     pathname === l.to ? "text-primary" : "text-foreground"
@@ -104,7 +104,7 @@ export default function Nav() {
             ))}
             <li className="py-4">
               <Link
-                to={site.ctaTo}
+                to={site.ctaTo as "/"}
                 onClick={() => setOpen(false)}
                 className="block rounded-full bg-primary px-5 py-3 text-center text-sm font-medium text-primary-foreground"
               >
