@@ -2,8 +2,9 @@ import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
-import { CATEGORIES, collections, formatKES, type Product } from "@/lib/data";
+import { CATEGORIES, formatKES, type Collection, type Product } from "@/lib/data";
 import { emptyProduct } from "@/lib/catalog";
+import { emptyCollection, NAV_TARGETS, type SiteContent } from "@/lib/site";
 import { useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/admin")({
@@ -30,10 +31,36 @@ const field =
 const area =
   "w-full rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none focus:border-primary";
 
+type Tab = "listings" | "collections" | "content" | "menu";
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: "listings", label: "Listings" },
+  { id: "collections", label: "Collections" },
+  { id: "content", label: "Landing page" },
+  { id: "menu", label: "Menu" },
+];
+
 function AdminPage() {
-  const { ready, user, catalog, saveProduct, deleteProduct, resetCatalog } = useStore();
+  const {
+    ready,
+    user,
+    catalog,
+    saveProduct,
+    deleteProduct,
+    resetCatalog,
+    siteCollections,
+    saveCollection,
+    deleteCollection,
+    resetCollections,
+    site,
+    saveSite,
+    resetSite,
+  } = useStore();
+  const [tab, setTab] = useState<Tab>("listings");
   const [draft, setDraft] = useState<Product | null>(null);
   const [originalSlug, setOriginalSlug] = useState<string | undefined>(undefined);
+  const [colDraft, setColDraft] = useState<Collection | null>(null);
+  const [colOriginal, setColOriginal] = useState<string | undefined>(undefined);
 
   if (!ready) return <div className="mx-auto max-w-7xl px-5 py-24 lg:px-8">Loading…</div>;
 
@@ -98,25 +125,96 @@ function AdminPage() {
           <button
             type="button"
             onClick={() => {
-              resetCatalog();
-              setDraft(null);
-              toast.success("Catalogue reset to defaults");
+              if (tab === "listings") {
+                resetCatalog();
+                setDraft(null);
+                toast.success("Catalogue reset to defaults");
+              } else if (tab === "collections") {
+                resetCollections();
+                setColDraft(null);
+                toast.success("Collections reset to defaults");
+              } else {
+                resetSite();
+                toast.success("Page content reset to defaults");
+              }
             }}
             className="inline-flex h-12 items-center gap-2 rounded-full border border-border px-5 text-sm font-medium hover:border-primary hover:text-primary"
           >
             <RotateCcw className="h-4 w-4" aria-hidden /> Reset
           </button>
-          <button
-            type="button"
-            onClick={startNew}
-            className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground"
-          >
-            <Plus className="h-4 w-4" aria-hidden /> New listing
-          </button>
+          {tab === "listings" && (
+            <button
+              type="button"
+              onClick={startNew}
+              className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground"
+            >
+              <Plus className="h-4 w-4" aria-hidden /> New listing
+            </button>
+          )}
+          {tab === "collections" && (
+            <button
+              type="button"
+              onClick={() => {
+                setColDraft(emptyCollection());
+                setColOriginal(undefined);
+              }}
+              className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground"
+            >
+              <Plus className="h-4 w-4" aria-hidden /> New collection
+            </button>
+          )}
         </div>
       </header>
 
-      {draft && (
+      <nav className="mt-8 flex flex-wrap gap-2" aria-label="Admin sections">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setTab(t.id)}
+            className={`h-10 rounded-full px-5 text-sm font-medium transition-colors ${
+              tab === t.id
+                ? "bg-primary text-primary-foreground"
+                : "border border-border hover:border-primary hover:text-primary"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </nav>
+
+      {tab === "content" && <ContentEditor site={site} onSave={saveSite} />}
+      {tab === "menu" && <MenuEditor site={site} onSave={saveSite} />}
+
+      {tab === "collections" && (
+        <CollectionsEditor
+          collections={siteCollections}
+          draft={colDraft}
+          originalSlug={colOriginal}
+          setDraft={setColDraft}
+          onEdit={(c) => {
+            setColDraft({ ...c });
+            setColOriginal(c.slug);
+          }}
+          onSubmit={() => {
+            if (!colDraft) return;
+            const res = saveCollection(colDraft, colOriginal);
+            if (!res.ok) {
+              toast.error(res.error ?? "Could not save.");
+              return;
+            }
+            toast.success(colOriginal ? "Collection updated" : "Collection added");
+            setColDraft(null);
+            setColOriginal(undefined);
+          }}
+          onDelete={(c) => {
+            deleteCollection(c.slug);
+            toast.success(`${c.name} removed`);
+          }}
+        />
+      )}
+
+      {tab === "listings" && draft && (
         <section className="glass mt-10 rounded-2xl p-6">
           <h2 className="text-lg font-semibold">
             {originalSlug ? `Editing ${originalSlug}` : "New listing"}
@@ -179,7 +277,7 @@ function AdminPage() {
                 value={draft.collection}
                 onChange={(e) => set("collection", e.target.value)}
               >
-                {collections.map((c) => (
+                {siteCollections.map((c) => (
                   <option key={c.slug} value={c.slug}>
                     {c.name}
                   </option>
@@ -257,6 +355,7 @@ function AdminPage() {
         </section>
       )}
 
+      {tab === "listings" && (
       <section className="mt-10 overflow-hidden rounded-2xl border border-border">
         <table className="w-full text-left text-sm">
           <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
@@ -302,6 +401,359 @@ function AdminPage() {
           </tbody>
         </table>
       </section>
+      )}
     </div>
+  );
+}
+
+/* ----------------------------- landing content ---------------------------- */
+
+const TEXT_FIELDS: { key: keyof SiteContent; label: string; long?: boolean }[] = [
+  { key: "heroEyebrow", label: "Hero eyebrow" },
+  { key: "heroTitle", label: "Hero headline", long: true },
+  { key: "heroSubtitle", label: "Hero subtitle", long: true },
+  { key: "heroPrimaryLabel", label: "Hero primary button" },
+  { key: "heroSecondaryLabel", label: "Hero secondary button" },
+  { key: "heroImage", label: "Hero image URL (blank = default)" },
+  { key: "heroCardTitle", label: "Hero card title" },
+  { key: "heroCardText", label: "Hero card text" },
+  { key: "collectionsEyebrow", label: "Collections eyebrow" },
+  { key: "collectionsTitle", label: "Collections heading" },
+  { key: "featuredEyebrow", label: "Featured eyebrow" },
+  { key: "featuredTitle", label: "Featured heading" },
+  { key: "philosophyEyebrow", label: "Philosophy eyebrow" },
+  { key: "philosophyTitle", label: "Philosophy heading" },
+  { key: "philosophyBody1", label: "Philosophy paragraph 1", long: true },
+  { key: "philosophyBody2", label: "Philosophy paragraph 2", long: true },
+  { key: "closingTitle", label: "Closing heading" },
+  { key: "closingText", label: "Closing text", long: true },
+  { key: "closingButton", label: "Closing button" },
+];
+
+function ContentEditor({
+  site,
+  onSave,
+}: {
+  site: SiteContent;
+  onSave: (s: SiteContent) => void;
+}) {
+  const [form, setForm] = useState<SiteContent>(site);
+
+  const set = (key: keyof SiteContent, value: string) =>
+    setForm((prev) => ({ ...prev, [key]: value }));
+
+  return (
+    <section className="glass mt-8 rounded-2xl p-6">
+      <h2 className="text-lg font-semibold">Landing page content</h2>
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        {TEXT_FIELDS.map((f) => (
+          <label key={String(f.key)} className={`block text-sm ${f.long ? "sm:col-span-2" : ""}`}>
+            <span className="mb-2 block font-medium">{f.label}</span>
+            {f.long ? (
+              <textarea
+                rows={3}
+                className={area}
+                value={String(form[f.key] ?? "")}
+                onChange={(e) => set(f.key, e.target.value)}
+              />
+            ) : (
+              <input
+                className={field}
+                value={String(form[f.key] ?? "")}
+                onChange={(e) => set(f.key, e.target.value)}
+              />
+            )}
+          </label>
+        ))}
+      </div>
+
+      <h3 className="mt-8 text-sm font-semibold">Impact stats</h3>
+      <div className="mt-4 space-y-3">
+        {form.impact.map((row, i) => (
+          <div key={i} className="grid gap-3 sm:grid-cols-[10rem_1fr]">
+            <input
+              className={field}
+              value={row.stat}
+              aria-label={`Stat ${i + 1}`}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  impact: prev.impact.map((r, j) =>
+                    j === i ? { ...r, stat: e.target.value } : r,
+                  ),
+                }))
+              }
+            />
+            <input
+              className={field}
+              value={row.label}
+              aria-label={`Stat label ${i + 1}`}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  impact: prev.impact.map((r, j) =>
+                    j === i ? { ...r, label: e.target.value } : r,
+                  ),
+                }))
+              }
+            />
+          </div>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => {
+          onSave(form);
+          toast.success("Landing page updated");
+        }}
+        className="mt-6 h-12 rounded-full bg-primary px-7 text-sm font-medium text-primary-foreground"
+      >
+        Save content
+      </button>
+    </section>
+  );
+}
+
+/* --------------------------------- menu ---------------------------------- */
+
+function MenuEditor({ site, onSave }: { site: SiteContent; onSave: (s: SiteContent) => void }) {
+  const [form, setForm] = useState<SiteContent>(site);
+
+  return (
+    <section className="glass mt-8 rounded-2xl p-6">
+      <h2 className="text-lg font-semibold">Navigation menu</h2>
+      <div className="mt-6 space-y-3">
+        {form.menu.map((item, i) => (
+          <div key={i} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+            <input
+              className={field}
+              aria-label={`Menu label ${i + 1}`}
+              value={item.label}
+              onChange={(e) =>
+                setForm((p) => ({
+                  ...p,
+                  menu: p.menu.map((m, j) => (j === i ? { ...m, label: e.target.value } : m)),
+                }))
+              }
+            />
+            <select
+              className={field}
+              aria-label={`Menu link ${i + 1}`}
+              value={item.to}
+              onChange={(e) =>
+                setForm((p) => ({
+                  ...p,
+                  menu: p.menu.map((m, j) => (j === i ? { ...m, to: e.target.value } : m)),
+                }))
+              }
+            >
+              {NAV_TARGETS.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                aria-label={`Move ${item.label} up`}
+                disabled={i === 0}
+                onClick={() =>
+                  setForm((p) => {
+                    const menu = [...p.menu];
+                    const prev = menu[i - 1]!;
+                    menu[i - 1] = menu[i]!;
+                    menu[i] = prev;
+                    return { ...p, menu };
+                  })
+                }
+                className="h-12 rounded-full border border-border px-4 text-sm disabled:opacity-40"
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                aria-label={`Remove ${item.label}`}
+                onClick={() =>
+                  setForm((p) => ({ ...p, menu: p.menu.filter((_, j) => j !== i) }))
+                }
+                className="flex h-12 w-12 items-center justify-center rounded-full border border-border hover:border-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" aria-hidden />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setForm((p) => ({ ...p, menu: [...p.menu, { label: "New link", to: "/shop" }] }))}
+        className="mt-4 inline-flex h-11 items-center gap-2 rounded-full border border-border px-5 text-sm font-medium hover:border-primary hover:text-primary"
+      >
+        <Plus className="h-4 w-4" aria-hidden /> Add menu item
+      </button>
+
+      <div className="mt-8 grid gap-4 sm:grid-cols-2">
+        <label className="block text-sm">
+          <span className="mb-2 block font-medium">Header button label</span>
+          <input
+            className={field}
+            value={form.ctaLabel}
+            onChange={(e) => setForm((p) => ({ ...p, ctaLabel: e.target.value }))}
+          />
+        </label>
+        <label className="block text-sm">
+          <span className="mb-2 block font-medium">Header button link</span>
+          <select
+            className={field}
+            value={form.ctaTo}
+            onChange={(e) => setForm((p) => ({ ...p, ctaTo: e.target.value }))}
+          >
+            {NAV_TARGETS.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => {
+          onSave(form);
+          toast.success("Menu updated");
+        }}
+        className="mt-6 h-12 rounded-full bg-primary px-7 text-sm font-medium text-primary-foreground"
+      >
+        Save menu
+      </button>
+    </section>
+  );
+}
+
+/* ------------------------------ collections ------------------------------- */
+
+function CollectionsEditor({
+  collections,
+  draft,
+  originalSlug,
+  setDraft,
+  onEdit,
+  onSubmit,
+  onDelete,
+}: {
+  collections: Collection[];
+  draft: Collection | null;
+  originalSlug: string | undefined;
+  setDraft: (c: Collection | null) => void;
+  onEdit: (c: Collection) => void;
+  onSubmit: () => void;
+  onDelete: (c: Collection) => void;
+}) {
+  return (
+    <>
+      {draft && (
+        <section className="glass mt-8 rounded-2xl p-6">
+          <h2 className="text-lg font-semibold">
+            {originalSlug ? `Editing ${originalSlug}` : "New collection"}
+          </h2>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm">
+              <span className="mb-2 block font-medium">Name</span>
+              <input
+                className={field}
+                value={draft.name}
+                onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="mb-2 block font-medium">Slug (URL)</span>
+              <input
+                className={field}
+                value={draft.slug}
+                onChange={(e) => setDraft({ ...draft, slug: e.target.value })}
+              />
+            </label>
+            <label className="block text-sm sm:col-span-2">
+              <span className="mb-2 block font-medium">Image URL</span>
+              <input
+                className={field}
+                placeholder="https://…"
+                value={draft.image}
+                onChange={(e) => setDraft({ ...draft, image: e.target.value })}
+              />
+            </label>
+            <label className="block text-sm sm:col-span-2">
+              <span className="mb-2 block font-medium">Blurb</span>
+              <textarea
+                rows={3}
+                className={area}
+                value={draft.blurb}
+                onChange={(e) => setDraft({ ...draft, blurb: e.target.value })}
+              />
+            </label>
+          </div>
+          <div className="mt-6 flex gap-3">
+            <button
+              type="button"
+              onClick={onSubmit}
+              className="h-12 rounded-full bg-primary px-7 text-sm font-medium text-primary-foreground"
+            >
+              Save collection
+            </button>
+            <button
+              type="button"
+              onClick={() => setDraft(null)}
+              className="h-12 rounded-full border border-border px-7 text-sm font-medium hover:border-primary hover:text-primary"
+            >
+              Cancel
+            </button>
+          </div>
+        </section>
+      )}
+
+      <section className="mt-10 overflow-hidden rounded-2xl border border-border">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
+            <tr>
+              <th className="px-4 py-3">Collection</th>
+              <th className="hidden px-4 py-3 sm:table-cell">Slug</th>
+              <th className="px-4 py-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {collections.map((c) => (
+              <tr key={c.slug} className="border-t border-border">
+                <td className="px-4 py-3 font-medium">{c.name}</td>
+                <td className="hidden px-4 py-3 text-muted-foreground sm:table-cell">{c.slug}</td>
+                <td className="px-4 py-3">
+                  <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      aria-label={`Edit ${c.name}`}
+                      onClick={() => onEdit(c)}
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-border hover:border-primary hover:text-primary"
+                    >
+                      <Pencil className="h-4 w-4" aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Delete ${c.name}`}
+                      onClick={() => onDelete(c)}
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-border hover:border-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    </>
   );
 }
