@@ -96,7 +96,7 @@ export default function Nav() {
       {open && (
         <div className="glass-strong border-x-0 border-t-0 lg:hidden">
           <ul className="mx-auto flex max-w-7xl flex-col px-5 py-3">
-            {links.map((l) => (
+            {[...links, ...(user?.isAdmin ? [adminLink] : [])].map((l) => (
               <li key={l.to}>
                 <Link
                   to={l.to}
