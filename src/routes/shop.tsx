@@ -47,7 +47,7 @@ function Shop() {
   const [collection, setCollection] = useState(initial.collection ?? "all");
   const [maxPrice, setMaxPrice] = useState(8000);
   const [sort, setSort] = useState("featured");
-  const { catalog } = useStore();
+  const { catalog, siteCollections: collections } = useStore();
 
   const results = useMemo(() => {
     const term = q.trim().toLowerCase();
