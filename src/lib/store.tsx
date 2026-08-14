@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { products, type Product } from "./data";
+import { clearCatalog, loadCatalog, persistCatalog, syncModuleCatalog } from "./catalog";
 
 /* ---------------------------------- types --------------------------------- */
 
@@ -46,6 +47,7 @@ export type Account = {
   name: string;
   email: string;
   phone?: string | undefined;
+  isAdmin?: boolean | undefined;
 };
 
 /* -------------------------------- utilities ------------------------------- */
@@ -73,6 +75,29 @@ const CART_KEY = "sdl.cart";
 const USER_KEY = "sdl.user";
 const ORDERS_KEY = "sdl.orders";
 const SEQ_KEY = "sdl.seq";
+const ACCOUNTS_KEY = "sdl.accounts";
+
+type AccountRecord = { password: string; account: Account };
+
+/* Studio admin seeded on this device. Local-only convenience login: it unlocks
+   the listing manager in this browser and protects nothing on a server. */
+const ADMIN_EMAIL = "kplowren@yahoo.com";
+const ADMIN_PASSWORD = "Crimsons2023.";
+
+const seedAdmin = () => {
+  const accounts = read<Record<string, AccountRecord>>(ACCOUNTS_KEY, {});
+  const current = accounts[ADMIN_EMAIL];
+  accounts[ADMIN_EMAIL] = {
+    password: ADMIN_PASSWORD,
+    account: {
+      name: current?.account.name ?? "Studio Admin",
+      email: ADMIN_EMAIL,
+      phone: current?.account.phone,
+      isAdmin: true,
+    },
+  };
+  write(ACCOUNTS_KEY, accounts);
+};
 
 export const makeReference = () => {
   const seq = read<number>(SEQ_KEY, 123) + 1;
@@ -97,6 +122,10 @@ type StoreValue = {
   logout: () => void;
   updateProfile: (a: Partial<Account>) => void;
   orders: Order[];
+  catalog: Product[];
+  saveProduct: (product: Product, originalSlug?: string) => { ok: boolean; error?: string };
+  deleteProduct: (slug: string) => void;
+  resetCatalog: () => void;
   placeOrder: (customer: Order["customer"]) => Order;
 };
 
@@ -110,11 +139,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [user, setUser] = useState<Account | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [catalog, setCatalog] = useState<Product[]>(products);
 
   useEffect(() => {
     setCart(read<CartItem[]>(CART_KEY, []));
     setUser(read<Account | null>(USER_KEY, null));
     setOrders(read<Order[]>(ORDERS_KEY, []));
+    seedAdmin();
+    const stored = loadCatalog();
+    syncModuleCatalog(stored);
+    setCatalog(stored);
     setReady(true);
   }, []);
 
@@ -154,6 +188,41 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const clearCart = useCallback(() => setCart([]), []);
 
+  const commitCatalog = useCallback((list: Product[]) => {
+    persistCatalog(list);
+    syncModuleCatalog(list);
+    setCatalog(list);
+  }, []);
+
+  const saveProduct: StoreValue["saveProduct"] = useCallback(
+    (product, originalSlug) => {
+      const slug = product.slug.trim().toLowerCase();
+      if (!slug || !product.name.trim()) return { ok: false, error: "Name and slug are required." };
+      const list = loadCatalog();
+      const index = list.findIndex((p) => p.slug === (originalSlug ?? slug));
+      if (list.some((p, i) => p.slug === slug && i !== index))
+        return { ok: false, error: "Another product already uses that slug." };
+      const next: Product = { ...product, slug };
+      if (index >= 0) list[index] = next;
+      else list.unshift(next);
+      commitCatalog([...list]);
+      return { ok: true };
+    },
+    [commitCatalog],
+  );
+
+  const deleteProduct = useCallback(
+    (slug: string) => commitCatalog(loadCatalog().filter((p) => p.slug !== slug)),
+    [commitCatalog],
+  );
+
+  const resetCatalog = useCallback(() => {
+    clearCatalog();
+    const defaults = loadCatalog();
+    syncModuleCatalog(defaults);
+    setCatalog(defaults);
+  }, []);
+
   const priceOf = (slug: string) => products.find((p) => p.slug === slug)?.price ?? 0;
 
   const subtotal = useMemo(
@@ -165,25 +234,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   /* Accounts are stored locally on this device only — no passwords leave the
      browser and nothing sensitive is transmitted. */
   const register: StoreValue["register"] = useCallback((a) => {
-    const existing = read<Record<string, { password: string; account: Account }>>(
-      "sdl.accounts",
-      {},
-    );
+    const existing = read<Record<string, AccountRecord>>(ACCOUNTS_KEY, {});
     const key = a.email.trim().toLowerCase();
     if (!key || !a.password) return { ok: false, error: "Email and password required." };
     if (existing[key]) return { ok: false, error: "An account with that email exists." };
     const account: Account = { name: a.name, email: key, phone: a.phone };
     existing[key] = { password: a.password, account };
-    write("sdl.accounts", existing);
+    write(ACCOUNTS_KEY, existing);
     setUser(account);
     return { ok: true };
   }, []);
 
   const login: StoreValue["login"] = useCallback((email, password) => {
-    const existing = read<Record<string, { password: string; account: Account }>>(
-      "sdl.accounts",
-      {},
-    );
+    const existing = read<Record<string, AccountRecord>>(ACCOUNTS_KEY, {});
     const rec = existing[email.trim().toLowerCase()];
     if (!rec || rec.password !== password)
       return { ok: false, error: "Incorrect email or password." };
@@ -197,14 +260,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setUser((prev) => {
       if (!prev) return prev;
       const next = { ...prev, ...patch };
-      const existing = read<Record<string, { password: string; account: Account }>>(
-        "sdl.accounts",
-        {},
-      );
+      const existing = read<Record<string, AccountRecord>>(ACCOUNTS_KEY, {});
       const rec = existing[prev.email];
       if (rec) {
         rec.account = next;
-        write("sdl.accounts", existing);
+        write(ACCOUNTS_KEY, existing);
       }
       return next;
     });
@@ -252,6 +312,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     logout,
     updateProfile,
     orders,
+    catalog,
+    saveProduct,
+    deleteProduct,
+    resetCatalog,
     placeOrder,
   };
 
