@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { collections, products } from "@/lib/data";
+import { collections } from "@/lib/data";
 
 export const Route = createFileRoute("/collections")({
   head: () => ({
@@ -33,7 +33,7 @@ function Collections() {
 
       <div className="mt-12 space-y-14">
         {collections.map((c, i) => {
-          const count = products.filter((p) => p.collection === c.slug).length;
+          const count = catalog.filter((p) => p.collection === c.slug).length;
           return (
             <section
               key={c.slug}

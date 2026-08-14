@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Recycle, Scissors, Sprout } from "lucide-react";
 import hero from "@/assets/hero.jpg";
-import { collections, products } from "@/lib/data";
+import { collections } from "@/lib/data";
 import ProductCard from "@/components/ProductCard";
 
 export const Route = createFileRoute("/")({
@@ -36,7 +36,8 @@ const impact = [
 ];
 
 function Index() {
-  const featured = products.slice(0, 4);
+  const { catalog } = useStore();
+  const featured = catalog.slice(0, 4);
 
   return (
     <>

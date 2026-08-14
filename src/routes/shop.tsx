@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Search } from "lucide-react";
-import { CATEGORIES, collections, products } from "@/lib/data";
+import { CATEGORIES, collections } from "@/lib/data";
 import ProductCard from "@/components/ProductCard";
 
 type ShopSearch = {
@@ -49,7 +49,7 @@ function Shop() {
 
   const results = useMemo(() => {
     const term = q.trim().toLowerCase();
-    let list = products.filter((p) => {
+    let list = catalog.filter((p) => {
       const matchesTerm =
         !term ||
         p.name.toLowerCase().includes(term) ||
