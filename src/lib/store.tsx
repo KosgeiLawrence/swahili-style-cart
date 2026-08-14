@@ -387,6 +387,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     saveProduct,
     deleteProduct,
     resetCatalog,
+    siteCollections,
+    saveCollection,
+    deleteCollection,
+    resetCollections,
+    site,
+    saveSite,
+    resetSite,
     placeOrder,
   };
 
