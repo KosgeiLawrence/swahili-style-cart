@@ -27,3 +27,16 @@ npm run dev
 - TypeScript
 - React
 - Tailwind CSS
+
+## Static build for cPanel
+
+```bash
+npm install
+npm run build:spa
+```
+
+Writes a self-contained `dist/` folder (index.html, hashed JS/CSS, images,
+favicon, robots.txt and an Apache `.htaccess`). Upload the *contents* of
+`dist/` into `public_html` — no Node.js, backend or database needed at
+runtime. The `.htaccess` rewrites deep links (/shop, /product/x) back to
+index.html so client-side routing works.
