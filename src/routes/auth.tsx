@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
-import { useStore } from "@/lib/store";
+import { isAdminEmail, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -36,7 +36,7 @@ function AuthPage() {
     e.preventDefault();
     setError(null);
     const data = new FormData(e.currentTarget);
-    const email = String(data.get("email") ?? "");
+    const email = String(data.get("email") ?? "").trim();
     const password = String(data.get("password") ?? "");
 
     const result =
@@ -54,8 +54,9 @@ function AuthPage() {
       return;
     }
     toast.success(mode === "login" ? "Welcome back" : "Account created");
-    navigate({ to: "/account" });
+    navigate({ to: isAdminEmail(email) ? "/admin" : "/account" });
   };
+
 
   return (
     <div className="ambient mx-auto flex max-w-md flex-col items-center px-5 py-16 lg:px-8">

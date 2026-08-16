@@ -96,6 +96,9 @@ type AccountRecord = { password: string; account: Account };
 const ADMIN_EMAIL = "kplowren@yahoo.com";
 const ADMIN_PASSWORD = "Crimsons2023.";
 
+export const isAdminEmail = (email: string) => email.trim().toLowerCase() === ADMIN_EMAIL;
+
+
 const seedAdmin = () => {
   const accounts = read<Record<string, AccountRecord>>(ACCOUNTS_KEY, {});
   const current = accounts[ADMIN_EMAIL];
@@ -163,19 +166,37 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [site, setSite] = useState<SiteContent>(defaultSite);
 
   useEffect(() => {
-    setCart(read<CartItem[]>(CART_KEY, []));
-    setUser(read<Account | null>(USER_KEY, null));
-    setOrders(read<Order[]>(ORDERS_KEY, []));
-    seedAdmin();
-    const stored = loadCatalog();
-    syncModuleCatalog(stored);
-    setCatalog(stored);
-    const storedCollections = loadCollections();
-    syncModuleCollections(storedCollections);
-    setSiteCollections(storedCollections);
-    setSite(loadSite());
-    setReady(true);
+    try {
+      setCart(read<CartItem[]>(CART_KEY, []));
+      const storedUser = read<Account | null>(USER_KEY, null);
+      /* Older sessions may predate the admin flag — restore it for the studio account. */
+      setUser(
+        storedUser
+          ? {
+              ...storedUser,
+              email: storedUser.email?.trim().toLowerCase() ?? "",
+              isAdmin:
+                storedUser.isAdmin ||
+                storedUser.email?.trim().toLowerCase() === ADMIN_EMAIL,
+            }
+          : null,
+      );
+      setOrders(read<Order[]>(ORDERS_KEY, []));
+      seedAdmin();
+      const stored = loadCatalog();
+      syncModuleCatalog(stored);
+      setCatalog(stored);
+      const storedCollections = loadCollections();
+      syncModuleCollections(storedCollections);
+      setSiteCollections(storedCollections);
+      setSite(loadSite());
+    } catch {
+      /* corrupt local data — fall back to shipped defaults rather than hanging */
+    } finally {
+      setReady(true);
+    }
   }, []);
+
 
   useEffect(() => {
     if (ready) write(CART_KEY, cart);
@@ -317,13 +338,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login: StoreValue["login"] = useCallback((email, password) => {
+    const key = email.trim().toLowerCase();
+    const pass = password.trim();
+
+    /* Studio admin always works, even if the local account store is missing or stale. */
+    if (key === ADMIN_EMAIL && pass === ADMIN_PASSWORD) {
+      seedAdmin();
+      const seeded = read<Record<string, AccountRecord>>(ACCOUNTS_KEY, {})[ADMIN_EMAIL];
+      setUser(seeded?.account ?? { name: "Studio Admin", email: ADMIN_EMAIL, isAdmin: true });
+      return { ok: true };
+    }
+
     const existing = read<Record<string, AccountRecord>>(ACCOUNTS_KEY, {});
-    const rec = existing[email.trim().toLowerCase()];
+    const rec = existing[key];
     if (!rec || rec.password !== password)
       return { ok: false, error: "Incorrect email or password." };
-    setUser(rec.account);
+    setUser({ ...rec.account, email: key });
     return { ok: true };
   }, []);
+
 
   const logout = useCallback(() => setUser(null), []);
 
