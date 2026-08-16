@@ -96,7 +96,7 @@ export default function Footer() {
       </div>
       <div className="border-t border-border/70">
         <p className="mx-auto max-w-7xl px-5 py-6 text-xs text-muted-foreground lg:px-8">
-          © {new Date().getFullYear()} Swahili Design Lab. Nairobi, Kenya.
+          © {new Date().getFullYear()} Swahili Design Lab. Mombasa, Kenya.
         </p>
       </div>
     </footer>

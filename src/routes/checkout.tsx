@@ -141,7 +141,7 @@ function Checkout() {
                 id="county"
                 name="county"
                 required
-                placeholder="Nairobi"
+                placeholder="Mombasa"
                 className={`${field} mt-2`}
               />
             </div>

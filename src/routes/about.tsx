@@ -4,19 +4,19 @@ import hero from "@/assets/hero.jpg";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About Swahili Design Lab | Circular Design Studio in Nairobi" },
+      { title: "About Swahili Design Lab | Circular Design Studio in Mombasa" },
       {
         name: "description",
         content:
-          "Swahili Design Lab is a Nairobi design studio and marketplace building sustainable fashion through creative reuse, circular materials and fair, small-run production.",
+          "Swahili Design Lab is a Mombasa design studio and marketplace building sustainable fashion through creative reuse, circular materials and fair, small-run production.",
       },
       {
         property: "og:title",
-        content: "About Swahili Design Lab | Circular Design Studio in Nairobi",
+        content: "About Swahili Design Lab | Circular Design Studio in Mombasa",
       },
       {
         property: "og:description",
-        content: "A Nairobi studio building sustainable fashion through creative reuse.",
+        content: "A Mombasa studio building sustainable fashion through creative reuse.",
       },
       { property: "og:url", content: "/about" },
     ],
@@ -35,7 +35,7 @@ function About() {
             A studio built around what others throw away.
           </h1>
           <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-            Swahili Design Lab began in Nairobi with a simple observation: the material we need is
+            Swahili Design Lab began in Mombasa with a simple observation: the material we need is
             already here. Offcuts from tailoring workshops, retired sailcloth from the coast,
             second-hand denim arriving by the bale — all of it capable of becoming something
             better.

@@ -83,7 +83,7 @@ export const products: Product[] = [
     collection: "sustainable-bags",
     materials: ["Reclaimed cotton canvas", "Vintage textile offcuts", "Cotton thread"],
     sustainability:
-      "Every panel is cut from textile waste collected from Nairobi tailoring workshops, diverting roughly 0.4kg of fabric from landfill per bag.",
+      "Every panel is cut from textile waste collected from Mombasa tailoring workshops, diverting roughly 0.4kg of fabric from landfill per bag.",
     stock: 14,
   },
   {

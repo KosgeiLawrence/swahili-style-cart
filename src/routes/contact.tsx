@@ -10,10 +10,10 @@ export const Route = createFileRoute("/contact")({
       {
         name: "description",
         content:
-          "Get in touch with Swahili Design Lab in Nairobi about orders, wholesale, collaborations or custom sustainable pieces.",
+          "Get in touch with Swahili Design Lab in Mombasa about orders, wholesale, collaborations or custom sustainable pieces.",
       },
       { property: "og:title", content: "Contact | Swahili Design Lab" },
-      { property: "og:description", content: "Talk to the Swahili Design Lab studio in Nairobi." },
+      { property: "og:description", content: "Talk to the Swahili Design Lab studio in Mombasa." },
       { property: "og:url", content: "/contact" },
     ],
     links: [{ rel: "canonical", href: "/contact" }],
@@ -76,7 +76,7 @@ function Contact() {
           {[
             { Icon: Mail, label: "hello@swahilidesignlab.co.ke" },
             { Icon: Phone, label: "+254 700 000 000" },
-            { Icon: MapPin, label: "Studio visits by appointment, Nairobi" },
+            { Icon: MapPin, label: "Studio visits by appointment, Mombasa" },
           ].map(({ Icon, label }) => (
             <div key={label} className="flex items-start gap-3 rounded-2xl border border-border/60 bg-card p-5">
               <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
