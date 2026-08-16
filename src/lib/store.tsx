@@ -96,6 +96,9 @@ type AccountRecord = { password: string; account: Account };
 const ADMIN_EMAIL = "kplowren@yahoo.com";
 const ADMIN_PASSWORD = "Crimsons2023.";
 
+export const isAdminEmail = (email: string) => email.trim().toLowerCase() === ADMIN_EMAIL;
+
+
 const seedAdmin = () => {
   const accounts = read<Record<string, AccountRecord>>(ACCOUNTS_KEY, {});
   const current = accounts[ADMIN_EMAIL];
