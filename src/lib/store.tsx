@@ -156,46 +156,47 @@ const StoreContext = createContext<StoreValue | null>(null);
 const sameLine = (a: CartItem, slug: string, option?: string) =>
   a.slug === slug && (a.option ?? "") === (option ?? "");
 
+const initialUser = (): Account | null => {
+  const storedUser = read<Account | null>(USER_KEY, null);
+  if (!storedUser) return null;
+  const email = storedUser.email?.trim().toLowerCase() ?? "";
+  /* Older sessions may predate the admin flag — restore it for the studio account. */
+  return { ...storedUser, email, isAdmin: storedUser.isAdmin || email === ADMIN_EMAIL };
+};
+
+const initialCatalog = (): Product[] => {
+  const stored = loadCatalog();
+  syncModuleCatalog(stored);
+  return stored;
+};
+
+const initialCollections = (): Collection[] => {
+  const stored = loadCollections();
+  syncModuleCollections(stored);
+  return stored;
+};
+
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [user, setUser] = useState<Account | null>(null);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [catalog, setCatalog] = useState<Product[]>(products);
-  const [siteCollections, setSiteCollections] = useState<Collection[]>(loadCollections);
-  const [site, setSite] = useState<SiteContent>(defaultSite);
+  /* Lazy initialisers read localStorage before the first paint, so admin edits
+     render immediately instead of flashing the shipped defaults. */
+  const [cart, setCart] = useState<CartItem[]>(() => read<CartItem[]>(CART_KEY, []));
+  const [user, setUser] = useState<Account | null>(initialUser);
+  const [orders, setOrders] = useState<Order[]>(() => read<Order[]>(ORDERS_KEY, []));
+  const [catalog, setCatalog] = useState<Product[]>(initialCatalog);
+  const [siteCollections, setSiteCollections] = useState<Collection[]>(initialCollections);
+  const [site, setSite] = useState<SiteContent>(loadSite);
 
   useEffect(() => {
     try {
-      setCart(read<CartItem[]>(CART_KEY, []));
-      const storedUser = read<Account | null>(USER_KEY, null);
-      /* Older sessions may predate the admin flag — restore it for the studio account. */
-      setUser(
-        storedUser
-          ? {
-              ...storedUser,
-              email: storedUser.email?.trim().toLowerCase() ?? "",
-              isAdmin:
-                storedUser.isAdmin ||
-                storedUser.email?.trim().toLowerCase() === ADMIN_EMAIL,
-            }
-          : null,
-      );
-      setOrders(read<Order[]>(ORDERS_KEY, []));
       seedAdmin();
-      const stored = loadCatalog();
-      syncModuleCatalog(stored);
-      setCatalog(stored);
-      const storedCollections = loadCollections();
-      syncModuleCollections(storedCollections);
-      setSiteCollections(storedCollections);
-      setSite(loadSite());
     } catch {
       /* corrupt local data — fall back to shipped defaults rather than hanging */
     } finally {
       setReady(true);
     }
   }, []);
+
 
 
   useEffect(() => {
