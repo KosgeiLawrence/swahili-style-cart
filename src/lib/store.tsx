@@ -335,13 +335,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login: StoreValue["login"] = useCallback((email, password) => {
+    const key = email.trim().toLowerCase();
+    const pass = password.trim();
+
+    /* Studio admin always works, even if the local account store is missing or stale. */
+    if (key === ADMIN_EMAIL && pass === ADMIN_PASSWORD) {
+      seedAdmin();
+      const seeded = read<Record<string, AccountRecord>>(ACCOUNTS_KEY, {})[ADMIN_EMAIL];
+      setUser(seeded?.account ?? { name: "Studio Admin", email: ADMIN_EMAIL, isAdmin: true });
+      return { ok: true };
+    }
+
     const existing = read<Record<string, AccountRecord>>(ACCOUNTS_KEY, {});
-    const rec = existing[email.trim().toLowerCase()];
+    const rec = existing[key];
     if (!rec || rec.password !== password)
       return { ok: false, error: "Incorrect email or password." };
-    setUser(rec.account);
+    setUser({ ...rec.account, email: key });
     return { ok: true };
   }, []);
+
 
   const logout = useCallback(() => setUser(null), []);
 
