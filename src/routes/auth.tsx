@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
-import { useStore } from "@/lib/store";
+import { isAdminEmail, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
