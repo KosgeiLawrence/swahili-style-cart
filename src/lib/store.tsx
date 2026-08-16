@@ -163,19 +163,37 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [site, setSite] = useState<SiteContent>(defaultSite);
 
   useEffect(() => {
-    setCart(read<CartItem[]>(CART_KEY, []));
-    setUser(read<Account | null>(USER_KEY, null));
-    setOrders(read<Order[]>(ORDERS_KEY, []));
-    seedAdmin();
-    const stored = loadCatalog();
-    syncModuleCatalog(stored);
-    setCatalog(stored);
-    const storedCollections = loadCollections();
-    syncModuleCollections(storedCollections);
-    setSiteCollections(storedCollections);
-    setSite(loadSite());
-    setReady(true);
+    try {
+      setCart(read<CartItem[]>(CART_KEY, []));
+      const storedUser = read<Account | null>(USER_KEY, null);
+      /* Older sessions may predate the admin flag — restore it for the studio account. */
+      setUser(
+        storedUser
+          ? {
+              ...storedUser,
+              email: storedUser.email?.trim().toLowerCase() ?? "",
+              isAdmin:
+                storedUser.isAdmin ||
+                storedUser.email?.trim().toLowerCase() === ADMIN_EMAIL,
+            }
+          : null,
+      );
+      setOrders(read<Order[]>(ORDERS_KEY, []));
+      seedAdmin();
+      const stored = loadCatalog();
+      syncModuleCatalog(stored);
+      setCatalog(stored);
+      const storedCollections = loadCollections();
+      syncModuleCollections(storedCollections);
+      setSiteCollections(storedCollections);
+      setSite(loadSite());
+    } catch {
+      /* corrupt local data — fall back to shipped defaults rather than hanging */
+    } finally {
+      setReady(true);
+    }
   }, []);
+
 
   useEffect(() => {
     if (ready) write(CART_KEY, cart);
