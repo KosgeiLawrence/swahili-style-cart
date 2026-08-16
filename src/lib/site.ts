@@ -50,7 +50,7 @@ export const defaultSite: SiteContent = {
   ],
   ctaLabel: "Explore Collection",
   ctaTo: "/collections",
-  heroEyebrow: "Nairobi · Circular design studio",
+  heroEyebrow: "Mombasa · Circular design studio",
   heroTitle: "Sustainable Fashion, Designed With Purpose.",
   heroSubtitle:
     "Discover thoughtfully designed fashion and lifestyle pieces created through creativity, circularity and responsible design.",
@@ -73,7 +73,7 @@ export const defaultSite: SiteContent = {
   philosophyBody1:
     "Swahili Design Lab works with sustainable materials, creative reuse, responsible production and innovative design. Every piece begins with something that already exists — deadstock cloth, retired sailcloth, pre-loved denim, workshop offcuts.",
   philosophyBody2:
-    "Our designers rebuild those materials into pieces made to be kept, repaired and worn for years. Production happens in small runs, in Nairobi, with makers paid fairly for skilled hand work.",
+    "Our designers rebuild those materials into pieces made to be kept, repaired and worn for years. Production happens in small runs, in Mombasa, with makers paid fairly for skilled hand work.",
   closingTitle: "Wear the Change.",
   closingText:
     "Explore our collection of sustainable designs and support a new generation of responsible fashion.",
