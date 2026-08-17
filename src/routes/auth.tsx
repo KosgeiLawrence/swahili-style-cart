@@ -59,7 +59,7 @@ function AuthPage() {
 
 
   return (
-    <div className="ambient mx-auto flex max-w-md flex-col items-center px-5 py-16 lg:px-8">
+    <div className="mx-auto flex max-w-md flex-col items-center px-5 py-16 lg:px-8">
       <img
         src={logo}
         alt="Swahili Design Lab"
@@ -77,7 +77,7 @@ function AuthPage() {
           : "Save your details for faster order requests."}
       </p>
 
-      <form onSubmit={onSubmit} className="glass mt-8 w-full rounded-2xl p-6 sm:p-8">
+      <form onSubmit={onSubmit} className="mt-8 w-full rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-soft)] sm:p-8">
         <div className="space-y-4">
           {mode === "register" && (
             <div>
