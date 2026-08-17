@@ -74,7 +74,7 @@
   --input: oklch(0.9 0.004 100);
   --ring: oklch(0.79 0.135 217);
 
-  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-bg: rgba(255, 255, 255, 0.88);
   --glass-border: rgba(255, 255, 255, 0.7);
   --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 32px -18px rgba(0, 0, 0, 0.28);
   --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.05), 0 26px 50px -24px rgba(0, 0, 0, 0.32);
@@ -83,7 +83,6 @@
 @utility glass {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  backdrop-filter: blur(18px) saturate(150%);
   box-shadow: var(--shadow-soft);
   /* Keep repaints local: without containment every keystroke inside a glass
      panel forces the browser to re-blur the whole page behind it, which locks
@@ -139,7 +138,7 @@
       color-mix(in oklab, var(--primary) 26%, transparent),
       transparent 70%
     );
-    filter: blur(40px);
+    filter: blur(24px);
     pointer-events: none;
   }
 }
