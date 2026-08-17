@@ -92,9 +92,10 @@
 }
 
 @utility glass-strong {
-  background: rgba(255, 255, 255, 0.82);
+  /* Solid surface on purpose: a sticky backdrop-filter layer re-blurs the whole
+     page on every keystroke and froze the production build. */
+  background: rgba(255, 255, 255, 0.96);
   border: 1px solid rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(24px) saturate(160%);
   box-shadow: var(--shadow-soft);
   contain: paint;
 }
