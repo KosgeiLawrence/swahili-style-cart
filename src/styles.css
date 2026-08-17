@@ -85,6 +85,10 @@
   border: 1px solid var(--glass-border);
   backdrop-filter: blur(18px) saturate(150%);
   box-shadow: var(--shadow-soft);
+  /* Keep repaints local: without containment every keystroke inside a glass
+     panel forces the browser to re-blur the whole page behind it, which locks
+     up the main thread in the production build. */
+  contain: paint;
 }
 
 @utility glass-strong {
@@ -92,7 +96,9 @@
   border: 1px solid rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(24px) saturate(160%);
   box-shadow: var(--shadow-soft);
+  contain: paint;
 }
+
 
 @utility lift {
   transition:
