@@ -2,7 +2,6 @@
  * Client-only entry used by the static SPA build (`bun run build:spa`).
  * Produces a plain dist/ folder that can be uploaded straight to cPanel.
  */
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from "@tanstack/react-router";
 
@@ -13,9 +12,5 @@ const router = getRouter();
 
 const el = document.getElementById("root");
 if (el) {
-  createRoot(el).render(
-    <StrictMode>
-      <RouterProvider router={router} />
-    </StrictMode>,
-  );
+  createRoot(el).render(<RouterProvider router={router} />);
 }

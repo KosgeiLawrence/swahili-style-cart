@@ -26,6 +26,14 @@ RewriteRule ^ - [L]
 # Everything else falls back to the SPA shell
 RewriteRule . /index.html [L]
 
+# Always revalidate the SPA shell so a deployment cannot keep pointing at an
+# older hashed JavaScript bundle. Hashed assets remain safely cacheable below.
+<FilesMatch "^(index\.html|\.htaccess)$">
+  Header set Cache-Control "no-cache, no-store, must-revalidate"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
+</FilesMatch>
+
 <IfModule mod_deflate.c>
   AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
 </IfModule>
@@ -56,7 +64,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: { "@": resolve(process.cwd(), "src") },
-    dedupe: ["react", "react-dom", "@tanstack/react-router"],
+    dedupe: ["react", "react-dom", "react/jsx-runtime", "@tanstack/react-router"],
   },
   build: {
     outDir: "dist",
